@@ -1,0 +1,16 @@
+{
+  "name": "go-api",
+  "version": "1.0.0",
+  "description": "GoであそぶAPI。",
+  "author": "h-waji (hamltail)",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "ex1": "go run ./examples/01-basics",
+    "format": "gofmt -w .",
+    "format:check": "test -z \"$(gofmt -l .)\"",
+    "lint": "go vet ./...",
+    "test": "go test ./...",
+    "check": "npm run format:check && npm run lint && npm run test"
+  }
+}
