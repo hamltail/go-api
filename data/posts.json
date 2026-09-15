@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "user": {
+      "username": "hamru",
+      "displayName": "はむる"
+    },
+    "content": "GoでAPIを作っています。",
+    "postedOn": "2026-09-06",
+    "createdAt": "2026-09-06T10:00:00+09:00"
+  },
+  {
+    "id": 2,
+    "user": {
+      "username": "hamru",
+      "displayName": "はむる"
+    },
+    "content": "AI駆動で開発しています。",
+    "postedOn": "2026-09-15",
+    "createdAt": "2026-09-15T10:00:00+09:00"
+  }
+]
