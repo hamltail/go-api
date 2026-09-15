@@ -87,25 +87,7 @@ func requireAPIKey(apiKey string, next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func main() {
-	data, err := os.ReadFile("data/posts.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var posts []Post
-
-	if err := json.Unmarshal(data, &posts); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Loaded %d posts", len(posts))
-
-	apiKey := os.Getenv("API_KEY")
-	if apiKey == "" {
-		log.Fatal("API_KEY is required")
-	}
-
+func newHandler(posts []Post, apiKey string) http.Handler {
 	apiInfo := APIInfo{
 		Name:     "go-api",
 		Language: "Go",
@@ -187,11 +169,35 @@ func main() {
 		)
 	}))
 
+	return mux
+}
+
+func main() {
+	data, err := os.ReadFile("data/posts.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var posts []Post
+
+	if err := json.Unmarshal(data, &posts); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Loaded %d posts", len(posts))
+
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		log.Fatal("API_KEY is required")
+	}
+
+	handler := newHandler(posts, apiKey)
+
 	addr := ":3000"
 
 	log.Printf("API server listening on %s", addr)
 
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Fatal(err)
 	}
 }
