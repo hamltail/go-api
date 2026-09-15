@@ -21,6 +21,31 @@ type Post struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+type APIInfo struct {
+	Name     string `json:"name"`
+	Language string `json:"language"`
+	Category string `json:"category"`
+}
+
+type Meta struct {
+	API   APIInfo `json:"api"`
+	Count int     `json:"count,omitempty"`
+}
+
+type PostsResponse struct {
+	Meta Meta `json:"meta"`
+	Data struct {
+		Posts []Post `json:"posts"`
+	} `json:"data"`
+}
+
+type PostResponse struct {
+	Meta Meta `json:"meta"`
+	Data struct {
+		Post Post `json:"post"`
+	} `json:"data"`
+}
+
 func requireAPIKey(apiKey string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-API-Key") != apiKey {
@@ -51,6 +76,12 @@ func main() {
 		log.Fatal("API_KEY is required")
 	}
 
+	apiInfo := APIInfo{
+		Name:     "go-api",
+		Language: "Go",
+		Category: "public",
+	}
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
@@ -72,9 +103,17 @@ func main() {
 			}
 		}
 
+		response := PostsResponse{
+			Meta: Meta{
+				API:   apiInfo,
+				Count: len(result),
+			},
+		}
+		response.Data.Posts = result
+
 		w.Header().Set("Content-Type", "application/json")
 
-		if err := json.NewEncoder(w).Encode(result); err != nil {
+		if err := json.NewEncoder(w).Encode(response); err != nil {
 			log.Printf("failed to encode posts: %v", err)
 		}
 	}))
@@ -88,9 +127,16 @@ func main() {
 
 		for _, post := range posts {
 			if post.ID == id {
+				response := PostResponse{
+					Meta: Meta{
+						API: apiInfo,
+					},
+				}
+				response.Data.Post = post
+
 				w.Header().Set("Content-Type", "application/json")
 
-				if err := json.NewEncoder(w).Encode(post); err != nil {
+				if err := json.NewEncoder(w).Encode(response); err != nil {
 					log.Printf("failed to encode post: %v", err)
 				}
 
