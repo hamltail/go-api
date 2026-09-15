@@ -21,6 +21,17 @@ type Post struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+func requireAPIKey(apiKey string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-API-Key") != apiKey {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
 func main() {
 	data, err := os.ReadFile("data/posts.json")
 	if err != nil {
@@ -47,25 +58,15 @@ func main() {
 		_, _ = w.Write([]byte("OK"))
 	})
 
-	mux.HandleFunc("GET /api/v1/posts", func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-API-Key") != apiKey {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
+	mux.HandleFunc("GET /api/v1/posts", requireAPIKey(apiKey, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		if err := json.NewEncoder(w).Encode(posts); err != nil {
 			log.Printf("failed to encode posts: %v", err)
 		}
-	})
+	}))
 
-	mux.HandleFunc("GET /api/v1/posts/{id}", func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-API-Key") != apiKey {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
+	mux.HandleFunc("GET /api/v1/posts/{id}", requireAPIKey(apiKey, func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			http.Error(w, "Invalid post ID", http.StatusBadRequest)
@@ -85,7 +86,7 @@ func main() {
 		}
 
 		http.Error(w, "Post not found", http.StatusNotFound)
-	})
+	}))
 
 	addr := ":3000"
 
