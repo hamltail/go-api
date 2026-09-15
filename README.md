@@ -1,8 +1,37 @@
 # Go API
 
-GoであそぶAPI
+Goであそぶ
 
 ## API Design
+
+### API Category
+
+このAPIはPublic APIです。
+
+`/api/v1/*` へのアクセスにはAPIキーが必要です。APIキーは `X-API-Key` ヘッダーに指定します。
+
+`/health` は認証なしでアクセスできます。
+
+```json
+{
+  "meta": {
+    "api": {
+      "name": "go-api",
+      "language": "Go",
+      "category": "public"
+    }
+  }
+}
+```
+
+### Environment Variables
+
+```text
+API_KEY=your-api-key
+PORT=3000
+```
+
+`PORT` が指定されていない場合は `3000` を使用します。
 
 ### Endpoints
 
@@ -13,6 +42,12 @@ APIの稼働状態を確認します。
 #### `GET /api/v1/posts`
 
 投稿一覧を取得します。
+
+`username` クエリパラメータによる絞り込みにも対応しています。
+
+```text
+GET /api/v1/posts?username=hamru
+```
 
 #### `GET /api/v1/posts/:id`
 
@@ -35,9 +70,75 @@ APIの稼働状態を確認します。
 }
 ```
 
+### Response
+
+```json
+{
+  "meta": {
+    "api": {
+      "name": "go-api",
+      "language": "Go",
+      "category": "public"
+    },
+    "count": 1
+  },
+  "data": {
+    "posts": [
+      {
+        "id": 1,
+        "user": {
+          "username": "hamru",
+          "displayName": "はむる"
+        },
+        "content": "GoでAPIを作っています。",
+        "postedOn": "2026-09-06",
+        "createdAt": "2026-09-06T10:00:00+09:00"
+      }
+    ]
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Post not found"
+  }
+}
+```
+
+主なHTTPステータス:
+
+- `200 OK` - リクエスト成功
+- `400 Bad Request` - リクエストが不正
+- `401 Unauthorized` - APIキーが無効
+- `404 Not Found` - リソースが存在しない
+
 ## Data Source
 
-初期実装ではJSONファイルを使用します。
+JSONファイルを使用します。
+
+## Setup
+
+```bash
+API_KEY=test-api-key go run ./cmd/api
+```
+
+## Docker
+
+```bash
+docker build -t go-api .
+```
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -e API_KEY=test-api-key \
+  go-api
+```
 
 ## License
 
