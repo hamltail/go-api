@@ -193,7 +193,12 @@ func main() {
 
 	handler := newHandler(posts, apiKey)
 
-	addr := ":3000"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
+	addr := ":" + port
 
 	log.Printf("API server listening on %s", addr)
 
