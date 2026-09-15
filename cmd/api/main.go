@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type User struct {
@@ -47,6 +48,28 @@ func main() {
 		if err := json.NewEncoder(w).Encode(posts); err != nil {
 			log.Printf("failed to encode posts: %v", err)
 		}
+	})
+
+	mux.HandleFunc("GET /api/v1/posts/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(r.PathValue("id"))
+		if err != nil {
+			http.Error(w, "Invalid post ID", http.StatusBadRequest)
+			return
+		}
+
+		for _, post := range posts {
+			if post.ID == id {
+				w.Header().Set("Content-Type", "application/json")
+
+				if err := json.NewEncoder(w).Encode(post); err != nil {
+					log.Printf("failed to encode post: %v", err)
+				}
+
+				return
+			}
+		}
+
+		http.Error(w, "Post not found", http.StatusNotFound)
 	})
 
 	addr := ":3000"
