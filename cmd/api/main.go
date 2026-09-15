@@ -46,10 +46,40 @@ type PostResponse struct {
 	} `json:"data"`
 }
 
+type ErrorDetail struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+type ErrorResponse struct {
+	Error ErrorDetail `json:"error"`
+}
+
+func writeJSONError(w http.ResponseWriter, status int, code string, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	response := ErrorResponse{
+		Error: ErrorDetail{
+			Code:    code,
+			Message: message,
+		},
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("failed to encode error response: %v", err)
+	}
+}
+
 func requireAPIKey(apiKey string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-API-Key") != apiKey {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			writeJSONError(
+				w,
+				http.StatusUnauthorized,
+				"UNAUTHORIZED",
+				"Invalid API key",
+			)
 			return
 		}
 
@@ -121,7 +151,12 @@ func main() {
 	mux.HandleFunc("GET /api/v1/posts/{id}", requireAPIKey(apiKey, func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			http.Error(w, "Invalid post ID", http.StatusBadRequest)
+			writeJSONError(
+				w,
+				http.StatusBadRequest,
+				"INVALID_POST_ID",
+				"Invalid post ID",
+			)
 			return
 		}
 
@@ -144,7 +179,12 @@ func main() {
 			}
 		}
 
-		http.Error(w, "Post not found", http.StatusNotFound)
+		writeJSONError(
+			w,
+			http.StatusNotFound,
+			"NOT_FOUND",
+			"Post not found",
+		)
 	}))
 
 	addr := ":3000"
