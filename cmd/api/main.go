@@ -59,9 +59,22 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /api/v1/posts", requireAPIKey(apiKey, func(w http.ResponseWriter, r *http.Request) {
+		result := posts
+
+		username := r.URL.Query().Get("username")
+		if username != "" {
+			result = []Post{}
+
+			for _, post := range posts {
+				if post.User.Username == username {
+					result = append(result, post)
+				}
+			}
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 
-		if err := json.NewEncoder(w).Encode(posts); err != nil {
+		if err := json.NewEncoder(w).Encode(result); err != nil {
 			log.Printf("failed to encode posts: %v", err)
 		}
 	}))
